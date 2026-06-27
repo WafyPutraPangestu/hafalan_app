@@ -29,7 +29,10 @@
                 <span wire:loading.remove wire:target="cari">CEK PROGRESS &rarr;</span>
                 <span wire:loading wire:target="cari">MENCARI DATA...</span>
             </button>
+            <a href="/" wire:navigate class="btn btn-primary btn-xl btn-block" style="margin-top: 2rem;">Kembali
+            </a>
         </form>
+
 
         <p
             style="text-align: center; margin-top: 2rem; color: var(--color-neutral-500); font-size: 0.875rem; font-weight: 600;">
