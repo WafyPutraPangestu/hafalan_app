@@ -13,9 +13,8 @@ class Show extends Component
 {
     public Siswa $siswa;
 
-    public function mount($kode_akses)
+    public function mount(string $kode_akses): void
     {
-        // Cari siswa beserta data setoran dan ustadznya
         $this->siswa = Siswa::where('kode_akses', $kode_akses)
             ->with(['setorans.ustadz'])
             ->firstOrFail();
@@ -23,31 +22,44 @@ class Show extends Component
 
     public function render()
     {
-        $setorans = $this->siswa->setorans->sortByDesc('tanggal')->sortByDesc('jam');
+        // Sort sekali pakai sortBy chained (lebih efisien)
+        $setorans = $this->siswa->setorans
+            ->sortByDesc('tanggal')
+            ->sortByDesc('jam')
+            ->values();
 
-        // 1. Hitung Progress Mushaf (Asumsi 604 Halaman Al-Qur'an)
-        // Kita hanya menghitung setoran "Ziyadah" (Hafalan Baru)
+        // Progress Mushaf — hanya Ziyadah
         $totalHalamanZiyadah = $setorans->where('jenis', 'ziyadah')->sum('jumlah_halaman');
-        $persentaseQuran = min(($totalHalamanZiyadah / 604) * 100, 100);
+        $persentaseQuran     = round(min(($totalHalamanZiyadah / 604) * 100, 100), 1);
 
-        // 2. Data Grafik Kualitas (Distribusi Nilai)
-        $nilaiA = $setorans->where('nilai', 'A')->count();
-        $nilaiB = $setorans->where('nilai', 'B')->count();
-        $nilaiC = $setorans->where('nilai', 'C')->count();
-        $nilaiD = $setorans->where('nilai', 'D')->count();
-        $grafikNilai = collect([$nilaiA, $nilaiB, $nilaiC, $nilaiD])->toJson();
-
-        // 3. Statistik Cepat
-        $totalMurojaah = $setorans->where('jenis', 'murojaah')->count();
+        // Statistik cepat
+        $totalSetoran    = $setorans->count();
+        $totalZiyadah    = $setorans->where('jenis', 'ziyadah')->count();
+        $totalMurojaah   = $setorans->where('jenis', 'murojaah')->count();
         $setoranTerakhir = $setorans->first();
+
+        // Distribusi nilai — kirim sebagai array biasa, bukan JSON
+        // (biarkan Blade yang format, bukan JS)
+        $distribusiNilai = [
+            'A' => $setorans->where('nilai', 'A')->count(),
+            'B' => $setorans->where('nilai', 'B')->count(),
+            'C' => $setorans->where('nilai', 'C')->count(),
+            'D' => $setorans->where('nilai', 'D')->count(),
+        ];
+
+        // Nilai terbanyak
+        $nilaiTerbanyak = collect($distribusiNilai)->sortDesc()->keys()->first() ?? '—';
 
         return view('livewire.hafalan.show', compact(
             'setorans',
             'totalHalamanZiyadah',
-            'persentaseQuran',
-            'grafikNilai',
+            'totalSetoran',
+            'totalZiyadah',
             'totalMurojaah',
-            'setoranTerakhir'
+            'persentaseQuran',
+            'distribusiNilai',
+            'nilaiTerbanyak',
+            'setoranTerakhir',
         ));
     }
 }
