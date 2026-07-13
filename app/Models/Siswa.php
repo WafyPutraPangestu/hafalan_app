@@ -30,6 +30,7 @@ class Siswa extends Model
     {
         return [
             'tanggal_masuk' => 'date',
+            'metadata' => 'object',
         ];
     }
 

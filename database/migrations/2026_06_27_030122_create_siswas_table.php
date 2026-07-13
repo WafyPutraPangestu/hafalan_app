@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -21,6 +22,8 @@ return new class extends Migration
             $table->enum('status', ['aktif', 'alumni'])->default('aktif');
             $table->timestamps();
         });
+        DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+        DB::statement('CREATE INDEX siswas_nama_trgm_idx ON siswas USING GIN (nama gin_trgm_ops)');
     }
 
     /**

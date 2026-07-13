@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\Setoran;
 
 use App\Models\Setoran;
 use App\Models\Siswa;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -12,6 +13,7 @@ use Livewire\Component;
 #[Title('Edit Setoran — HafizApp')]
 class Edit extends Component
 {
+
     public Setoran $setoran;
 
     public string $searchSiswa = '';
@@ -48,6 +50,7 @@ class Edit extends Component
 
     public function mount(Setoran $setoran)
     {
+        abort_unless(Auth::user()->isAdmin(), 403);
         $this->setoran = $setoran;
 
         $this->siswa_id = $setoran->siswa_id;

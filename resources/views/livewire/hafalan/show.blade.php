@@ -9,17 +9,15 @@
             Kembali
         </a>
     </div>
-    {{-- ===================== HERO SISWA ===================== --}}
 
+    {{-- ===================== HERO SISWA ===================== --}}
     <div class="card mb-4">
         <div class="card-body" style="padding: 1.5rem;">
             <div class="flex items-start gap-5">
-                {{-- Avatar --}}
-                <div class="avatar avatar-xl flex-shrink-0">
+                {{-- <div class="avatar avatar-xl flex-shrink-0">
                     {{ strtoupper(substr($siswa->nama, 0, 2)) }}
-                </div>
+                </div> --}}
 
-                {{-- Info --}}
                 <div class="flex-1 min-w-0">
                     <h1 class="text-2xl font-extrabold tracking-tight text-[--color-neutral-900] leading-tight">
                         {{ $siswa->nama }}
@@ -37,18 +35,23 @@
                                 {{ $siswa->kelas }}
                             </span>
                         @endif
-                        @if ($siswa->ustadz)
-                            <span class="info-chip">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                </svg>
-                                {{ $siswa->ustadz }}
+
+                        {{-- Badge level aktif — pengganti info ustadz yang sudah tidak ada di kolom siswa --}}
+                        @if ($tingkatanAktif)
+                            <span class="badge badge-primary badge-dot">
+                                @if ($tingkatanAktif === 'iqro')
+                                    Sedang di: Iqro {{ $iqroAktif ?? '-' }}
+                                @elseif($tingkatanAktif === 'juz_ama')
+                                    Sedang di: Juz Amma
+                                @else
+                                    Sedang di: Al-Qur'an
+                                @endif
                             </span>
                         @endif
-                        <span class="badge badge-success badge-dot">Aktif</span>
+
+                        <span class="badge badge-{{ $siswa->status === 'aktif' ? 'success' : 'neutral' }} badge-dot">
+                            {{ ucfirst($siswa->status) }}
+                        </span>
                     </div>
 
                     <div class="flex items-center gap-2 mt-3">
@@ -75,8 +78,8 @@
                 </svg>
             </div>
             <div>
-                <div class="card-stat-label" style="color: var(--color-primary-700);">Halaman dihafal</div>
-                <div class="card-stat-value" style="color: var(--color-primary-800);">{{ $totalHalamanZiyadah }}</div>
+                <div class="card-stat-label" style="color: var(--color-primary-700);">Halaman dihafal (Qur'an)</div>
+                <div class="card-stat-value" style="color: var(--color-primary-800);">{{ $totalHalamanQuran }}</div>
                 <div class="card-stat-sub">dari 604 halaman</div>
             </div>
         </div>
@@ -92,7 +95,8 @@
             <div>
                 <div class="card-stat-label">Total setoran</div>
                 <div class="card-stat-value">{{ $totalSetoran }}</div>
-                <div class="card-stat-sub">{{ $totalZiyadah }} ziyadah · {{ $totalMurojaah }} muroja'ah</div>
+                <div class="card-stat-sub">{{ $totalZiyadah }} ziyadah · {{ $totalMurojaah }} muroja'ah ·
+                    {{ $totalTadarus }} tadarus</div>
             </div>
         </div>
 
@@ -115,9 +119,8 @@
 
         <div class="card-stat">
             <div class="card-stat-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon
                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
@@ -142,9 +145,23 @@
             <div>
                 <span class="alert-title">Setoran terakhir</span>
                 <span class="text-sm">
-                    {{ $setoranTerakhir->nama_surah ?? 'Setoran' }}
-                    @if ($setoranTerakhir->halaman_awal && $setoranTerakhir->halaman_akhir)
-                        — Hal. {{ $setoranTerakhir->halaman_awal }}–{{ $setoranTerakhir->halaman_akhir }}
+                    @if ($setoranTerakhir->tingkatan === 'iqro')
+                        Iqro {{ $setoranTerakhir->iqro_awal }} (Hal {{ $setoranTerakhir->halaman_iqro_awal }})
+                        @if ($setoranTerakhir->iqro_awal != $setoranTerakhir->iqro_akhir)
+                            – Iqro {{ $setoranTerakhir->iqro_akhir }} (Hal {{ $setoranTerakhir->halaman_iqro_akhir }})
+                        @endif
+                    @elseif($setoranTerakhir->tingkatan === 'juz_ama')
+                        {{ $setoranTerakhir->surah_awal }} ayat {{ $setoranTerakhir->ayat_awal }}
+                        @if (
+                            $setoranTerakhir->surah_awal !== $setoranTerakhir->surah_akhir ||
+                                $setoranTerakhir->ayat_awal != $setoranTerakhir->ayat_akhir)
+                            – {{ $setoranTerakhir->surah_akhir }} ayat {{ $setoranTerakhir->ayat_akhir }}
+                        @endif
+                    @else
+                        {{ strtoupper($setoranTerakhir->juz) }}, Hal {{ $setoranTerakhir->halaman_awal }}
+                        @if ($setoranTerakhir->halaman_awal != $setoranTerakhir->halaman_akhir)
+                            – {{ $setoranTerakhir->halaman_akhir }}
+                        @endif
                     @endif
                     ·
                     <span class="font-bold">{{ ucfirst($setoranTerakhir->jenis) }}</span>
@@ -161,51 +178,78 @@
         </div>
     @endif
 
-    {{-- ===================== PROGRESS + DISTRIBUSI NILAI ===================== --}}
+    {{-- ===================== PROGRESS (3 LEVEL) + DISTRIBUSI NILAI ===================== --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
 
-        {{-- Progress --}}
+        {{-- Progress per tingkatan --}}
         <div class="card">
             <div class="card-header">
-                <h2 class="h6 mb-0">Progress mushaf</h2>
-                <span class="badge badge-primary">{{ $persentaseQuran }}%</span>
+                <h2 class="h6 mb-0">Progress hafalan</h2>
             </div>
             <div class="card-body flex flex-col gap-4">
+
+                {{-- Iqro — hanya tampil kalau pernah ada setoran iqro --}}
+                @if ($iqroTertinggi)
+                    <div class="progress-wrapper">
+                        <div class="progress-labels">
+                            <span class="progress-label">Iqro</span>
+                            <span class="progress-value">Jilid {{ $iqroTertinggi }} / 6</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: {{ $persentaseIqro }}%"></div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Juz Amma — hanya tampil kalau pernah ada setoran juz amma --}}
+                @if ($totalHalamanJuzAmma > 0)
+                    <div class="progress-wrapper">
+                        <div class="progress-labels">
+                            <span class="progress-label">Juz Amma</span>
+                            <span class="progress-value">{{ $persentaseJuzAmma }}%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: {{ $persentaseJuzAmma }}%"></div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Qur'an — selalu tampil sebagai tujuan akhir --}}
                 <div class="progress-wrapper">
                     <div class="progress-labels">
-                        <span class="progress-label">Halaman dihafal</span>
-                        <span class="progress-value">{{ $totalHalamanZiyadah }} / 604</span>
+                        <span class="progress-label">Al-Qur'an (604 halaman)</span>
+                        <span class="progress-value">{{ $totalHalamanQuran }} / 604</span>
                     </div>
                     <div class="progress-track progress-track-lg">
                         <div class="progress-fill" style="width: {{ $persentaseQuran }}%"></div>
                     </div>
-                    <p class="text-caption mt-1">{{ $persentaseQuran }}% dari Al-Qur'an (604 halaman)</p>
+                    <p class="text-caption mt-1">{{ $persentaseQuran }}% dari keseluruhan mushaf</p>
                 </div>
 
-                {{-- Visual Juz --}}
-                <div>
-                    <p class="text-label mb-2">Estimasi per juz (30 juz)</p>
-                    <div class="flex flex-wrap gap-1">
-                        @php $halamanPerJuz = 20.13; @endphp
-                        @for ($juz = 1; $juz <= 30; $juz++)
-                            @php
-                                $selesai = $totalHalamanZiyadah >= $juz * $halamanPerJuz;
-                                $sebagian = !$selesai && $totalHalamanZiyadah > ($juz - 1) * $halamanPerJuz;
-                            @endphp
-                            <div title="Juz {{ $juz }}"
-                                style="width:18px;height:18px;border-radius:4px;font-size:8px;font-weight:800;
-                                       display:flex;align-items:center;justify-content:center;
-                                       background:{{ $selesai ? 'var(--color-primary-400)' : ($sebagian ? 'var(--color-primary-200)' : 'var(--color-neutral-100)') }};
-                                       color:{{ $selesai ? 'var(--color-neutral-900)' : 'var(--color-neutral-500)' }};
-                                       border:1px solid {{ $selesai ? 'var(--color-neutral-900)' : 'var(--color-neutral-200)' }}">
-                                {{ $juz }}
-                            </div>
-                        @endfor
+                {{-- Visual 30 Juz — hanya relevan kalau sudah masuk tingkatan quran --}}
+                @if ($totalHalamanQuran > 0)
+                    <div>
+                        <p class="text-label mb-2">Estimasi per juz (30 juz)</p>
+                        <div class="flex flex-wrap gap-1">
+                            @php $halamanPerJuz = 20.13; @endphp
+                            @for ($juz = 1; $juz <= 30; $juz++)
+                                @php
+                                    $selesai = $totalHalamanQuran >= $juz * $halamanPerJuz;
+                                    $sebagian = !$selesai && $totalHalamanQuran > ($juz - 1) * $halamanPerJuz;
+                                @endphp
+                                <div title="Juz {{ $juz }}"
+                                    style="width:18px;height:18px;border-radius:4px;font-size:8px;font-weight:800;
+                                           display:flex;align-items:center;justify-content:center;
+                                           background:{{ $selesai ? 'var(--color-primary-400)' : ($sebagian ? 'var(--color-primary-200)' : 'var(--color-neutral-100)') }};
+                                           color:{{ $selesai ? 'var(--color-neutral-900)' : 'var(--color-neutral-500)' }};
+                                           border:1px solid {{ $selesai ? 'var(--color-neutral-900)' : 'var(--color-neutral-200)' }}">
+                                    {{ $juz }}
+                                </div>
+                            @endfor
+                        </div>
+                        <p class="text-caption mt-2">Hijau tua = selesai · Hijau muda = sebagian · Abu = belum</p>
                     </div>
-                    <p class="text-caption mt-2">
-                        Hijau tua = selesai · Hijau muda = sebagian · Abu = belum
-                    </p>
-                </div>
+                @endif
             </div>
         </div>
 
@@ -234,34 +278,64 @@
                                 </div>
                                 <div class="text-caption">{{ $meta['label'] }}</div>
                                 @if ($totalSetoran > 0)
-                                    <div class="text-caption">
-                                        {{ round(($jml / $totalSetoran) * 100) }}%
-                                    </div>
+                                    <div class="text-caption">{{ round(($jml / $totalSetoran) * 100) }}%</div>
                                 @endif
                             </div>
                         </div>
                     @endforeach
+
+                    {{-- Nilai non-huruf (misal angka) — hanya tampil kalau ada --}}
+                    @if ($nilaiLainnya > 0)
+                        <div
+                            class="flex items-center gap-3 p-3 rounded-xl border border-[--color-neutral-100]
+                                    bg-[--color-neutral-50] col-span-2">
+                            <div class="grade-badge grade-neutral flex-shrink-0">#</div>
+                            <div>
+                                <div class="text-xl font-extrabold text-[--color-neutral-900] leading-none">
+                                    {{ $nilaiLainnya }}
+                                </div>
+                                <div class="text-caption">Nilai lainnya (angka)</div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- RIWAYAT SETORAN — tabel dengan kolom catatan terpisah --}}
+    {{-- ===================== RIWAYAT SETORAN ===================== --}}
     <div class="card">
         <div class="card-header">
             <h2 class="h6 mb-0">Riwayat setoran</h2>
-            <span class="text-caption">{{ $totalSetoran }} total</span>
+            <span class="text-caption">{{ $setorans->count() }} ditampilkan</span>
+        </div>
+
+        {{-- Tab filter tingkatan --}}
+        <div class="card-body" style="padding-bottom: 0;">
+            <div class="tabs-list-pills">
+                <button type="button" wire:click="setFilter('')"
+                    class="tab-btn-pill {{ $filterTingkatan === '' ? 'active' : '' }}">Semua</button>
+                <button type="button" wire:click="setFilter('iqro')"
+                    class="tab-btn-pill {{ $filterTingkatan === 'iqro' ? 'active' : '' }}">Iqro</button>
+                <button type="button" wire:click="setFilter('juz_ama')"
+                    class="tab-btn-pill {{ $filterTingkatan === 'juz_ama' ? 'active' : '' }}">Juz Amma</button>
+                <button type="button" wire:click="setFilter('quran')"
+                    class="tab-btn-pill {{ $filterTingkatan === 'quran' ? 'active' : '' }}">Al-Qur'an</button>
+            </div>
         </div>
 
         @if ($setorans->isEmpty())
-            {{-- empty state tidak berubah --}}
+            <div class="empty-state">
+                <div class="empty-state-title">Belum Ada Data</div>
+                <p class="empty-state-desc">Belum ada riwayat setoran untuk filter ini.</p>
+            </div>
         @else
             <div class="table-wrapper" style="border:none;border-radius:0;box-shadow:none;">
                 <table class="table">
                     <thead>
                         <tr>
                             <th>Tanggal</th>
-                            <th>Surah</th>
+                            <th>Capaian</th>
                             <th>Jenis</th>
                             <th>Halaman</th>
                             <th>Nilai</th>
@@ -271,7 +345,7 @@
                     </thead>
                     <tbody>
                         @foreach ($setorans as $setoran)
-                            <tr>
+                            <tr wire:key="riwayat-{{ $setoran->id }}">
                                 <td class="text-caption whitespace-nowrap">
                                     {{ \Carbon\Carbon::parse($setoran->tanggal)->translatedFormat('d M Y') }}
                                     @if ($setoran->jam)
@@ -281,48 +355,64 @@
                                     @endif
                                 </td>
 
-                                {{-- Kolom Surah (tanpa catatan) --}}
+                                {{-- Kolom Capaian — conditional sesuai tingkatan --}}
                                 <td>
-                                    <span class="font-semibold text-sm text-[--color-neutral-900]">
-                                        {{ $setoran->surah_awal }}
-                                        @if ($setoran->surah_awal !== $setoran->surah_akhir)
-                                            — {{ $setoran->surah_akhir }}
+                                    @if ($setoran->tingkatan === 'iqro')
+                                        <span class="badge badge-primary" style="margin-bottom:4px;">IQRO</span><br>
+                                        <span class="font-semibold text-sm">Iqro {{ $setoran->iqro_awal }}</span>
+                                        <span class="text-caption">(Hal {{ $setoran->halaman_iqro_awal }})</span>
+                                        @if ($setoran->iqro_awal != $setoran->iqro_akhir || $setoran->halaman_iqro_awal != $setoran->halaman_iqro_akhir)
+                                            <div class="text-caption">s/d Iqro {{ $setoran->iqro_akhir }} (Hal
+                                                {{ $setoran->halaman_iqro_akhir }})</div>
                                         @endif
-                                    </span>
-                                    <div class="text-caption">
-                                        Ayat {{ $setoran->ayat_awal }}
-                                        @if ($setoran->ayat_awal !== $setoran->ayat_akhir)
-                                            – {{ $setoran->ayat_akhir }}
+                                    @elseif($setoran->tingkatan === 'juz_ama')
+                                        <span class="badge badge-warning" style="margin-bottom:4px;">JUZ
+                                            AMMA</span><br>
+                                        <span class="font-semibold text-sm">{{ $setoran->surah_awal }}</span>
+                                        <span class="text-caption">(Ayat {{ $setoran->ayat_awal }})</span>
+                                        @if ($setoran->surah_awal !== $setoran->surah_akhir || $setoran->ayat_awal != $setoran->ayat_akhir)
+                                            <div class="text-caption">s/d {{ $setoran->surah_akhir }} (Ayat
+                                                {{ $setoran->ayat_akhir }})</div>
                                         @endif
-                                    </div>
-                                </td>
-
-                                <td>
-                                    @if ($setoran->jenis === 'ziyadah')
-                                        <span class="badge pill-ziyadah">Ziyadah</span>
-                                    @else
-                                        <span class="badge pill-murojaah">Muroja'ah</span>
+                                    @elseif($setoran->tingkatan === 'quran')
+                                        <span class="badge badge-juz"
+                                            style="margin-bottom:4px;">{{ strtoupper($setoran->juz) }}</span><br>
+                                        <span class="font-semibold text-sm">Halaman
+                                            {{ $setoran->halaman_awal }}</span>
+                                        @if ($setoran->halaman_awal != $setoran->halaman_akhir)
+                                            <span class="text-caption">s/d {{ $setoran->halaman_akhir }}</span>
+                                        @endif
                                     @endif
                                 </td>
 
+                                <td>
+                                    @php
+                                        $pillClass = match ($setoran->jenis) {
+                                            'ziyadah' => 'pill-ziyadah',
+                                            'murojaah' => 'pill-murojaah',
+                                            'tadarus' => 'pill-tadarus',
+                                            default => 'badge-neutral',
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $pillClass }}">{{ ucfirst($setoran->jenis) }}</span>
+                                </td>
+
                                 <td class="text-sm font-semibold text-[--color-neutral-700] whitespace-nowrap">
-                                    {{ $setoran->jumlah_halaman }} hal.
+                                    {{ (float) $setoran->jumlah_halaman }} hal.
                                 </td>
 
                                 <td>
-                                    <span
-                                        class="grade-badge {{ match ($setoran->nilai) {
-                                            'A' => 'grade-a',
-                                            'B' => 'grade-b',
-                                            'C' => 'grade-c',
-                                            'D' => 'grade-d',
-                                            default => '',
-                                        } }}">
+                                    @php
+                                        $nilaiLower = strtolower((string) $setoran->nilai);
+                                        $gradeClass = in_array($nilaiLower, ['a', 'b', 'c', 'd'])
+                                            ? 'grade-' . $nilaiLower
+                                            : 'grade-neutral';
+                                    @endphp
+                                    <span class="grade-badge {{ $gradeClass }}">
                                         {{ $setoran->nilai ?? '—' }}
                                     </span>
                                 </td>
 
-                                {{-- Kolom Catatan terpisah --}}
                                 <td class="text-sm text-[--color-neutral-600] max-w-[160px]">
                                     @if ($setoran->catatan)
                                         <span class="truncate-2">{{ $setoran->catatan }}</span>

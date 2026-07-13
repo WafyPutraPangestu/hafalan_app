@@ -47,6 +47,12 @@ return new class extends Migration
             $table->string('nilai')->comment('A/B/C atau angka');
             $table->text('catatan')->nullable();
             $table->timestamps();
+
+            // ===== INDEX tambahan untuk performa query =====
+            $table->index(['jenis', 'tingkatan']);
+            $table->index(['tanggal', 'jam']);
+            // siswa_id & ustadz_id TIDAK perlu ditambah manual,
+            // karena foreignId()->constrained() otomatis bikin index sendiri
         });
     }
 

@@ -49,6 +49,7 @@ class Create extends Component
 
     public function mount()
     {
+        abort_unless(Auth::user()->isUstadz(), 403);
         $this->tanggal = now()->format('Y-m-d');
         $this->jam = now()->format('H:i');
     }

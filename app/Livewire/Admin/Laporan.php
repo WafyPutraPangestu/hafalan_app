@@ -20,7 +20,7 @@ class Laporan extends Component
     public $startDate;
     public $endDate;
     public $jenis = '';
-    public $tingkatan = ''; // Tambahan: Filter berdasarkan Iqro/Juz Amma/Quran
+    public $tingkatan = '';
 
     // Custom Search Dropdown Properties
     public $siswa_id = '';
@@ -28,12 +28,10 @@ class Laporan extends Component
 
     public function mount()
     {
-        // Default filter: Bulan berjalan
         $this->startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
         $this->endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
     }
 
-    // Reset pagination ketika filter berubah
     public function updatingStartDate()
     {
         $this->resetPage();
@@ -53,7 +51,7 @@ class Laporan extends Component
     public function updatingSearchSiswa()
     {
         if ($this->siswa_id) {
-            $this->siswa_id = ''; // Reset ID jika user mengetik ulang
+            $this->siswa_id = '';
         }
         $this->resetPage();
     }
@@ -72,41 +70,62 @@ class Laporan extends Component
         $this->resetPage();
     }
 
-    public function render()
+    /**
+     * Query dasar dengan semua filter aktif.
+     * Dipisah supaya bisa dipakai ulang untuk stats maupun listing,
+     * tanpa duplikasi kondisi when().
+     */
+    protected function baseQuery()
     {
-        // 1. Build Query dengan Filter Lengkap
-        $query = Setoran::with(['siswa', 'ustadz'])
+        return Setoran::query()
             ->when($this->startDate, fn($q) => $q->whereDate('tanggal', '>=', $this->startDate))
             ->when($this->endDate, fn($q) => $q->whereDate('tanggal', '<=', $this->endDate))
             ->when($this->jenis, fn($q) => $q->where('jenis', $this->jenis))
             ->when($this->tingkatan, fn($q) => $q->where('tingkatan', $this->tingkatan))
             ->when($this->siswa_id, fn($q) => $q->where('siswa_id', $this->siswa_id));
+    }
 
-        // 2. Hitung Statistik Ringkasan (Berdasarkan filter saat ini)
-        $statsQuery = clone $query;
-        $totalSetoran = $statsQuery->count();
-        $totalHalaman = $statsQuery->sum('jumlah_halaman');
-        $totalZiyadah = (clone $statsQuery)->where('jenis', 'ziyadah')->count();
-        $totalMurojaah = (clone $statsQuery)->where('jenis', 'murojaah')->count();
-        $totalTadarus = (clone $statsQuery)->where('jenis', 'tadarus')->count(); // Tambahan tadarus
+    public function render()
+    {
+        // 1. Statistik ringkasan — 1 query saja pakai conditional aggregation (Postgres FILTER)
+        $stats = $this->baseQuery()
+            ->selectRaw("
+                COUNT(*) as total_setoran,
+                COALESCE(SUM(jumlah_halaman), 0) as total_halaman,
+                COUNT(*) FILTER (WHERE jenis = 'ziyadah') as total_ziyadah,
+                COUNT(*) FILTER (WHERE jenis = 'murojaah') as total_murojaah,
+                COUNT(*) FILTER (WHERE jenis = 'tadarus') as total_tadarus
+            ")
+            ->first();
 
-        // 3. Ambil Data Tabel (Paginated)
-        $setorans = $query->orderByDesc('tanggal')->orderByDesc('jam')->paginate(20);
+        // 2. Data tabel (paginated) — query baru, hanya select relasi yang dipakai di view
+        $setorans = $this->baseQuery()
+            ->with([
+                'siswa:id,nama,kelas',
+                'ustadz:id,name',
+            ])
+            ->orderByDesc('tanggal')
+            ->orderByDesc('jam')
+            ->paginate(20);
 
-        // 4. Ambil Data Santri untuk Dropdown (Hanya jika belum memilih siswa)
+        // 3. Dropdown pencarian santri
         $siswas = [];
         if (strlen($this->searchSiswa) > 0 && empty($this->siswa_id)) {
-            $siswas = Siswa::where('nama', 'ilike', '%' . $this->searchSiswa . '%')->take(5)->get();
+            $siswas = Siswa::query()
+                ->select('id', 'nama', 'kelas')
+                ->where('nama', 'ilike', '%' . $this->searchSiswa . '%')
+                ->take(5)
+                ->get();
         }
 
-        return view('livewire.admin.laporan', compact(
-            'setorans',
-            'siswas',
-            'totalSetoran',
-            'totalHalaman',
-            'totalZiyadah',
-            'totalMurojaah',
-            'totalTadarus'
-        ));
+        return view('livewire.admin.laporan', [
+            'setorans' => $setorans,
+            'siswas' => $siswas,
+            'totalSetoran' => $stats->total_setoran,
+            'totalHalaman' => $stats->total_halaman,
+            'totalZiyadah' => $stats->total_ziyadah,
+            'totalMurojaah' => $stats->total_murojaah,
+            'totalTadarus' => $stats->total_tadarus,
+        ]);
     }
 }

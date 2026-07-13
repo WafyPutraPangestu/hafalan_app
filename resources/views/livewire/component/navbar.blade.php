@@ -1,6 +1,6 @@
 {{-- NAVBAR --}}
-<nav class="navbar" x-data @click.outside="$wire.closeAll()">
-    <div class="navbar-inner">
+<nav class="navbar flex" x-data @click.outside="$wire.closeAll()">
+    <div class="navbar-inner ">
 
         {{-- BRAND --}}
         <a wire:navigate href="/" class="navbar-brand">
@@ -39,8 +39,9 @@
             </li>
 
             @auth
-                {{-- Divider --}}
                 <li aria-hidden="true" class="navbar-divider-item"></li>
+
+                {{-- Dashboard — admin only --}}
 
                 <li>
                     <a wire:navigate href="{{ route('dashboard') }}"
@@ -55,19 +56,39 @@
                         Dashboard
                     </a>
                 </li>
-                <li>
-                    <a wire:navigate href="{{ route('admin.siswa.index') }}"
-                        class="navbar-link {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                            <circle cx="9" cy="7" r="4" />
-                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                        </svg>
-                        Siswa
-                    </a>
-                </li>
+                @if (auth()->user()->isAdmin())
+                    <li>
+                        <a wire:navigate href="{{ route('admin.ustadz.index') }}"
+                            class="navbar-link {{ request()->routeIs('admin.ustadz.*') ? 'active' : '' }}">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                <path d="M18.5 9.5 21 12l-2.5 2.5" />
+                            </svg>
+                            Akun
+                        </a>
+                    </li>
+
+                    {{-- Siswa — admin only --}}
+                    <li>
+                        <a wire:navigate href="{{ route('admin.siswa.index') }}"
+                            class="navbar-link {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                            Siswa
+                        </a>
+                    </li>
+                @endif
+
+                {{-- Setoran — admin & ustadz --}}
                 <li>
                     <a wire:navigate href="{{ route('admin.setoran.index') }}"
                         class="navbar-link {{ request()->routeIs('admin.setoran.*') ? 'active' : '' }}">
@@ -81,18 +102,22 @@
                         Setoran
                     </a>
                 </li>
-                <li>
-                    <a wire:navigate href="{{ route('admin.laporan') }}"
-                        class="navbar-link {{ request()->routeIs('admin.laporan*') ? 'active' : '' }}">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" x2="18" y1="20" y2="10" />
-                            <line x1="12" x2="12" y1="20" y2="4" />
-                            <line x1="6" x2="6" y1="20" y2="14" />
-                        </svg>
-                        Laporan
-                    </a>
-                </li>
+
+                {{-- Laporan — admin only --}}
+                @if (auth()->user()->isAdmin())
+                    <li>
+                        <a wire:navigate href="{{ route('admin.laporan') }}"
+                            class="navbar-link {{ request()->routeIs('admin.laporan*') ? 'active' : '' }}">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" x2="18" y1="20" y2="10" />
+                                <line x1="12" x2="12" y1="20" y2="4" />
+                                <line x1="6" x2="6" y1="20" y2="14" />
+                            </svg>
+                            Laporan
+                        </a>
+                    </li>
+                @endif
             @endauth
         </ul>
 
@@ -164,7 +189,8 @@
 
     {{-- MOBILE MENU --}}
     @if ($mobileMenuOpen)
-        <div class="lg:hidden border-t border-[--color-neutral-200] bg-white px-4 py-3 flex flex-col gap-1"
+        {{-- SESUDAH --}}
+        <div class="navbar-mobile-panel lg:hidden border-t border-[--color-neutral-200] px-4 py-3 flex flex-col gap-1"
             style="animation: dropdown-in 0.15s ease both;">
             <a wire:navigate href="/" wire:click="closeAll"
                 class="navbar-link w-full {{ request()->is('/') ? 'active' : '' }}">
@@ -187,7 +213,8 @@
 
             @auth
                 <div class="h-px bg-[--color-neutral-200] my-1"></div>
-                <p class="text-label px-3 pt-1">Menu Admin</p>
+                <p class="text-label px-3 pt-1">Menu {{ auth()->user()->isAdmin() ? 'Admin' : 'Ustadz' }}</p>
+
 
                 <a wire:navigate href="{{ route('dashboard') }}" wire:click="closeAll"
                     class="navbar-link w-full {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -200,17 +227,34 @@
                     </svg>
                     Dashboard
                 </a>
-                <a wire:navigate href="{{ route('admin.siswa.index') }}" wire:click="closeAll"
-                    class="navbar-link w-full {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                    Siswa
-                </a>
+                @if (auth()->user()->isAdmin())
+                    <li>
+                        <a wire:navigate href="{{ route('admin.ustadz.index') }}"
+                            class="navbar-link {{ request()->routeIs('admin.ustadz.*') ? 'active' : '' }}">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                                <path d="M18.5 9.5 21 12l-2.5 2.5" />
+                            </svg>
+                            Akun
+                        </a>
+                    </li>
+                    <a wire:navigate href="{{ route('admin.siswa.index') }}" wire:click="closeAll"
+                        class="navbar-link w-full {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                        Siswa
+                    </a>
+                @endif
+
                 <a wire:navigate href="{{ route('admin.setoran.index') }}" wire:click="closeAll"
                     class="navbar-link w-full {{ request()->routeIs('admin.setoran.*') ? 'active' : '' }}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -220,17 +264,19 @@
                     </svg>
                     Setoran
                 </a>
-                <a wire:navigate href="{{ route('admin.laporan') }}" wire:click="closeAll"
-                    class="navbar-link w-full {{ request()->routeIs('admin.laporan*') ? 'active' : '' }}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" x2="18" y1="20" y2="10" />
-                        <line x1="12" x2="12" y1="20" y2="4" />
-                        <line x1="6" x2="6" y1="20" y2="14" />
-                    </svg>
-                    Laporan
-                </a>
 
+                @if (auth()->user()->isAdmin())
+                    <a wire:navigate href="{{ route('admin.laporan') }}" wire:click="closeAll"
+                        class="navbar-link w-full {{ request()->routeIs('admin.laporan*') ? 'active' : '' }}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" x2="18" y1="20" y2="10" />
+                            <line x1="12" x2="12" y1="20" y2="4" />
+                            <line x1="6" x2="6" y1="20" y2="14" />
+                        </svg>
+                        Laporan
+                    </a>
+                @endif
                 <div class="h-px bg-[--color-neutral-200] my-1"></div>
                 <div class="flex items-center gap-3 px-3 py-2">
                     <div class="avatar avatar-md">

@@ -22,18 +22,37 @@ Route::get('/cek-hafalan/{kode_akses}', HafalanShow::class)->name('hafalan.show'
 Route::get('/auth/login', Login::class)->name('login')->middleware('guest');
 
 Route::middleware('auth')->group(function () {
+
+    // Dashboard — admin & ustadz sama-sama boleh, isinya beda per role
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
-    Route::prefix('admin/siswa')->name('admin.siswa.')->group(function () {
+    // ===== SISWA — ADMIN ONLY =====
+    Route::prefix('admin/siswa')->name('admin.siswa.')->middleware('role:admin')->group(function () {
         Route::get('/', Index::class)->name('index');
         Route::get('/create', Create::class)->name('create');
         Route::get('/{siswa}', Show::class)->name('show');
         Route::get('/{siswa}/edit', Edit::class)->name('edit');
     });
-    Route::prefix('admin/setoran')->name('admin.setoran.')->group(function () {
-        Route::get('/', SetoranIndex::class)->name('index');
-        Route::get('/create', SetoranCreate::class)->name('create');
-        Route::get('/{setoran}/edit', SetoranEdit::class)->name('edit');
+    // ===== MANAJEMEN AKUN (USTADZ & ADMIN) — ADMIN ONLY =====
+    Route::prefix('admin/ustadz')->name('admin.ustadz.')->middleware('role:admin')->group(function () {
+        Route::get('/', \App\Livewire\Admin\Ustadz\Index::class)->name('index');
+        Route::get('/create', \App\Livewire\Admin\Ustadz\Create::class)->name('create');
+        Route::get('/{user}/edit', \App\Livewire\Admin\Ustadz\Edit::class)->name('edit');
     });
-    Route::get('/admin/laporan', Laporan::class)->name('admin.laporan');
+
+    // ===== SETORAN =====
+    Route::prefix('admin/setoran')->name('admin.setoran.')->group(function () {
+
+        // Lihat daftar/riwayat setoran — admin & ustadz boleh (query di-scope di dalam component)
+        Route::get('/', SetoranIndex::class)->name('index');
+
+        // Input setoran baru — HANYA ustadz
+        Route::get('/create', SetoranCreate::class)->name('create')->middleware('role:ustadz');
+
+        // Edit/override setoran — HANYA admin
+        Route::get('/{setoran}/edit', SetoranEdit::class)->name('edit')->middleware('role:admin');
+    });
+
+    // ===== LAPORAN — ADMIN ONLY =====
+    Route::get('/admin/laporan', Laporan::class)->name('admin.laporan')->middleware('role:admin');
 });

@@ -6,13 +6,15 @@
             <p class="page-subtitle">Riwayat setoran hafalan seluruh santri.</p>
         </div>
         <div class="page-header-actions">
-            <a href="{{ route('admin.setoran.create') }}" wire:navigate class="btn btn-primary btn-md">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                    stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Setoran Baru
-            </a>
+            @can('ustadz')
+                <a href="{{ route('admin.setoran.create') }}" wire:navigate class="btn btn-primary btn-md">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Setoran Baru
+                </a>
+            @endcan
         </div>
     </div>
 
@@ -94,7 +96,9 @@
                         <th>Jml Halaman</th>
                         <th>Nilai</th>
                         <th>Ustadz</th>
-                        <th class="text-right">Aksi</th>
+                        @can('admin')
+                            <th class="text-right">Aksi</th>
+                        @endcan
                     </tr>
                 </thead>
                 <tbody>
@@ -166,32 +170,54 @@
                             </td>
 
                             <td>{{ $item->ustadz->name }}</td>
-
-                            <td class="text-right">
-                                <div class="dropdown" x-data="{ open: false }">
-                                    <button @click="open = !open" @click.outside="open = false"
-                                        class="btn btn-ghost btn-icon-sm">
-                                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"
-                                            stroke="currentColor" stroke-width="2">
-                                            <circle cx="12" cy="6" r="1.5" />
-                                            <circle cx="12" cy="12" r="1.5" />
-                                            <circle cx="12" cy="18" r="1.5" />
-                                        </svg>
-                                    </button>
-                                    <div class="dropdown-menu right" x-show="open" x-cloak style="display: none;">
-                                        <a href="{{ route('admin.setoran.edit', $item->id) }}" wire:navigate
-                                            class="dropdown-item">
-                                            Edit Data
-                                        </a>
-                                        <div class="dropdown-divider"></div>
-                                        <button wire:click="deleteSetoran({{ $item->id }})"
-                                            wire:confirm="Yakin ingin menghapus setoran ini? Data tidak bisa dikembalikan."
-                                            class="dropdown-item danger">
-                                            Hapus
+                            @can('admin')
+                                <td class="text-left">
+                                    <div class="dropdown" x-data="{ open: false, top: 0, left: 0 }">
+                                        <button type="button" x-ref="trigger" title="Aksi lainnya"
+                                            aria-label="Aksi lainnya" :class="{ 'is-open': open }" class="action-trigger"
+                                            @click="
+                open = !open;
+                if (open) {
+                    const rect = $refs.trigger.getBoundingClientRect();
+                    top = rect.bottom + 6;
+                    left = rect.right - 200;
+                }
+            "
+                                            @click.outside="open = false">
+                                            <svg viewBox="0 0 24 24" style="width:16px; height:16px;" fill="currentColor">
+                                                <circle cx="12" cy="6" r="1.6" />
+                                                <circle cx="12" cy="12" r="1.6" />
+                                                <circle cx="12" cy="18" r="1.6" />
+                                            </svg>
                                         </button>
+
+                                        <div x-show="open" x-cloak @click.outside="open = false"
+                                            :style="`position: fixed; top: ${top}px; left: ${left}px; z-index: 70;`"
+                                            class="dropdown-menu">
+                                            <a href="{{ route('admin.setoran.edit', $item->id) }}" wire:navigate
+                                                class="dropdown-item">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.5-9.5a2.121 2.121 0 013 3L12 16l-4 1 1-4 9.5-9.5z" />
+                                                </svg>
+                                                Edit Data
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <button wire:click="deleteSetoran({{ $item->id }})"
+                                                wire:confirm="Yakin ingin menghapus setoran ini? Data tidak bisa dikembalikan."
+                                                class="dropdown-item danger">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
+                                                </svg>
+                                                Hapus
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
+                                </td>
+                            @endcan
                         </tr>
                     @endforeach
                 </tbody>

@@ -4,8 +4,10 @@
     <div class="page-header">
         <div class="page-header-text">
             <h1 class="page-title">Assalamu'alaikum, {{ auth()->user()->name }}!</h1>
-            <p class="page-subtitle">Berikut adalah ringkasan <span class="text-highlight">progres hafalan</span> santri
-                hari ini.</p>
+            <p class="page-subtitle">
+                Berikut adalah ringkasan <span class="text-highlight">progres hafalan</span>
+                {{ $isAdmin ? 'seluruh santri' : 'santri yang kamu bimbing' }} hari ini.
+            </p>
         </div>
         <div class="page-header-actions">
             <a href="{{ route('admin.setoran.create') }}" wire:navigate class="btn btn-primary">
@@ -47,27 +49,45 @@
                 <div class="card-stat-icon"
                     style="background: var(--color-warning-50); color: var(--color-warning-600);">📅</div>
             </div>
-            <div class="card-stat-sub">Total setoran sepanjang bulan berjalan.</div>
+            <div class="card-stat-sub">
+                @php
+                    $growthClass = $growthPercent > 0 ? 'up' : ($growthPercent < 0 ? 'down' : 'flat');
+                    $growthIcon = $growthPercent > 0 ? '↑' : ($growthPercent < 0 ? '↓' : '→');
+                @endphp
+                <span class="growth-pill {{ $growthClass }}">
+                    {{ $growthIcon }} {{ abs($growthPercent) }}%
+                </span>
+                <span>vs minggu lalu</span>
+            </div>
         </div>
 
-        <div class="card-stat"
-            style="background: var(--color-primary-100); border-color: var(--color-primary-300); justify-content: center; align-items: center; gap: 0.5rem; cursor: pointer;"
-            onclick="window.Livewire.navigate('{{ route('admin.siswa.create') }}')">
-            <div class="avatar avatar-md"
-                style="background: var(--color-neutral-900); color: var(--color-primary-400);">+</div>
-            <div
-                style="font-weight: 800; color: var(--color-neutral-900); text-transform: uppercase; font-size: 0.875rem;">
-                Tambah Santri</div>
-        </div>
+        @if ($isAdmin)
+            <div class="card-stat"
+                style="background: var(--color-primary-100); border-color: var(--color-primary-300); justify-content: center; align-items: center; gap: 0.5rem; cursor: pointer;"
+                onclick="window.Livewire.navigate('{{ route('admin.siswa.create') }}')">
+                <div class="avatar avatar-md"
+                    style="background: var(--color-neutral-900); color: var(--color-primary-400);">+</div>
+                <div
+                    style="font-weight: 800; color: var(--color-neutral-900); text-transform: uppercase; font-size: 0.875rem;">
+                    Tambah Santri
+                </div>
+            </div>
+        @else
+            <div class="card-stat"
+                style="background: var(--color-primary-100); border-color: var(--color-primary-300); justify-content: center; align-items: center; gap: 0.5rem; cursor: pointer;"
+                onclick="window.Livewire.navigate('{{ route('admin.setoran.create') }}')">
+                <div class="avatar avatar-md"
+                    style="background: var(--color-neutral-900); color: var(--color-primary-400);">+</div>
+                <div
+                    style="font-weight: 800; color: var(--color-neutral-900); text-transform: uppercase; font-size: 0.875rem;">
+                    Input Setoran
+                </div>
+            </div>
+        @endif
     </div>
 
-    <!-- ============================================== -->
-    <!-- AREA GRAFIK / CHART                            -->
-    <!-- ============================================== -->
-    <div
-        style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin-bottom: 1.5rem; @media(min-width: 1024px){ grid-template-columns: 2fr 1fr; }">
-
-        <!-- CHART 1: Tren Setoran (Area Chart) -->
+    <!-- AREA GRAFIK -->
+    <div class="dashboard-grid-2-1" style="margin-bottom: 1.5rem;">
         <div class="card" x-data="{
             init() {
                 let options = {
@@ -81,8 +101,7 @@
                     yaxis: { labels: { style: { colors: '#a1a1aa', fontWeight: 600 } } },
                     grid: { borderColor: '#e4e4e7', strokeDashArray: 4 }
                 };
-                let chart = new ApexCharts(this.$refs.chartTren, options);
-                chart.render();
+                new ApexCharts(this.$refs.chartTren, options).render();
             }
         }">
             <div class="card-header">
@@ -93,14 +112,13 @@
             </div>
         </div>
 
-        <!-- CHART 2: Komposisi Jenis (Donut Chart) -->
         <div class="card" x-data="{
             init() {
                 let options = {
                     series: {{ $chartJenisData }},
-                    labels: ['Ziyadah', 'Murojaah', 'Tadarus'], // Tambah Tadarus
+                    labels: ['Ziyadah', 'Murojaah', 'Tadarus'],
                     chart: { type: 'donut', height: 300, fontFamily: 'var(--font-sans)' },
-                    colors: ['#a3e635', '#27272a', '#3b82f6'], // Warna: Ziyadah(Primary), Murojaah(Dark), Tadarus(Info/Blue)
+                    colors: ['#a3e635', '#27272a', '#3b82f6'],
                     plotOptions: {
                         pie: {
                             donut: { size: '75%', labels: { show: true, name: { show: true }, value: { show: true, fontSize: '1.5rem', fontWeight: 800, color: '#09090b' }, total: { show: true, showAlways: true, label: 'Total', fontSize: '0.875rem', fontWeight: 700, color: '#71717a' } } }
@@ -110,8 +128,7 @@
                     stroke: { show: false },
                     legend: { position: 'bottom', fontWeight: 700, markers: { radius: 12 } }
                 };
-                let chart = new ApexCharts(this.$refs.chartJenis, options);
-                chart.render();
+                new ApexCharts(this.$refs.chartJenis, options).render();
             }
         }">
             <div class="card-header">
@@ -124,15 +141,67 @@
         </div>
     </div>
 
-    <!-- AREA TABEL DAN DAFTAR SANTRI -->
-    <div
-        style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; @media(min-width: 1024px){ grid-template-columns: 2fr 1fr; }">
+    <!-- BREAKDOWN TINGKATAN & NILAI -->
+    <div class="dashboard-grid-2-1" style="margin-bottom: 1.5rem;">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="h5">Distribusi Tingkatan Bulan Ini</h3>
+            </div>
+            <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                @php
+                    $totalTingkatan = array_sum($tingkatanBreakdown) ?: 1;
+                    $tingkatanConfig = [
+                        'iqro' => ['label' => 'Iqro', 'color' => '#a3e635'],
+                        'juz_ama' => ['label' => 'Juz Amma', 'color' => '#f59e0b'],
+                        'quran' => ['label' => "Al-Qur'an", 'color' => '#3b82f6'],
+                    ];
+                @endphp
+                @foreach ($tingkatanConfig as $key => $cfg)
+                    @php $count = $tingkatanBreakdown[$key]; @endphp
+                    <div class="tingkatan-bar-row">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8125rem; font-weight:700;">
+                            <span>{{ $cfg['label'] }}</span>
+                            <span style="color: var(--color-neutral-500);">{{ $count }} setoran</span>
+                        </div>
+                        <div class="tingkatan-bar-track">
+                            <div class="tingkatan-bar-fill"
+                                style="width: {{ round(($count / $totalTingkatan) * 100) }}%; background: {{ $cfg['color'] }};">
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="h5">Distribusi Nilai</h3>
+            </div>
+            <div class="card-body" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                @foreach (['A', 'B', 'C', 'D'] as $grade)
+                    <div style="display:flex; align-items:center; gap:0.625rem; flex: 1; min-width: 100px;">
+                        <span class="grade-badge grade-{{ strtolower($grade) }}">{{ $grade }}</span>
+                        <div>
+                            <div style="font-weight:800; font-size:1.125rem; color: var(--color-neutral-900);">
+                                {{ $nilaiBreakdown[$grade] }}
+                            </div>
+                            <div class="text-caption">setoran</div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <!-- TABEL DAN DAFTAR SANTRI -->
+    <div class="dashboard-grid-2-1">
         <div class="card">
             <div class="card-header">
                 <h3 class="h5">Riwayat Setoran Terbaru</h3>
                 <a href="{{ route('admin.setoran.index') }}" wire:navigate
-                    style="font-size: 0.8125rem; font-weight: 700; color: var(--color-primary-600); text-decoration: none;">LIHAT
-                    SEMUA &rarr;</a>
+                    style="font-size: 0.8125rem; font-weight: 700; color: var(--color-primary-600); text-decoration: none;">
+                    LIHAT SEMUA &rarr;
+                </a>
             </div>
             <div class="table-wrapper" style="border-radius: 0; border: none; box-shadow: none;">
                 <table class="table">
@@ -150,7 +219,6 @@
                                 <td>
                                     <strong
                                         style="color: var(--color-neutral-900);">{{ $setoran->siswa->nama }}</strong><br>
-
                                     @php
                                         $pillClass = match ($setoran->jenis) {
                                             'ziyadah' => 'pill-ziyadah',
@@ -164,7 +232,6 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <!-- LOGIK DINAMIS TINGKATAN (Versi ringkas untuk Dashboard) -->
                                     @if ($setoran->tingkatan === 'iqro')
                                         <span class="badge badge-primary"
                                             style="margin-bottom:4px; font-size:0.6rem; padding: 2px 6px;">IQRO</span><br>
@@ -183,9 +250,12 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="grade-badge grade-{{ strtolower($setoran->nilai) }}">
-                                        {{ $setoran->nilai }}
-                                    </span>
+                                    @if (in_array(strtoupper($setoran->nilai), ['A', 'B', 'C', 'D']))
+                                        <span
+                                            class="grade-badge grade-{{ strtolower($setoran->nilai) }}">{{ strtoupper($setoran->nilai) }}</span>
+                                    @else
+                                        <span class="badge badge-neutral">{{ $setoran->nilai }}</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <strong>{{ \Carbon\Carbon::parse($setoran->tanggal)->format('d M') }}</strong><br>
@@ -199,7 +269,8 @@
                                 <td colspan="4">
                                     <div class="empty-state">
                                         <div class="empty-state-title">Belum Ada Setoran</div>
-                                        <p class="empty-state-desc">Belum ada rekapan setoran yang diinput hari ini.</p>
+                                        <p class="empty-state-desc">Belum ada rekapan setoran yang diinput hari ini.
+                                        </p>
                                     </div>
                                 </td>
                             </tr>
@@ -214,17 +285,22 @@
                 <h3 class="h5">Santri Teraktif Bulan Ini</h3>
             </div>
             <div class="card-body" style="display: flex; flex-direction: column; gap: 1rem;">
-                @forelse($topSantris as $index => $santri)
+                @forelse($topSantris as $santri)
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <div class="avatar avatar-md"
-                            style="background: {{ $index === 0 ? 'var(--color-gold-400)' : 'var(--color-neutral-200)' }}; color: var(--color-neutral-900);">
-                            {{ $index + 1 }}
+                            style="background: {{ $loop->first ? 'var(--color-gold-400)' : 'var(--color-neutral-200)' }}; color: var(--color-neutral-900);">
+                            {{ $loop->iteration }}
                         </div>
                         <div style="flex: 1;">
-                            <a href="{{ route('admin.siswa.show', $santri->id) }}" wire:navigate
-                                style="font-weight: 700; color: var(--color-neutral-900); text-decoration: none;">
-                                {{ $santri->nama }}
-                            </a>
+                            @if ($isAdmin)
+                                <a href="{{ route('admin.siswa.show', $santri->id) }}" wire:navigate
+                                    style="font-weight: 700; color: var(--color-neutral-900); text-decoration: none;">
+                                    {{ $santri->nama }}
+                                </a>
+                            @else
+                                <span
+                                    style="font-weight: 700; color: var(--color-neutral-900);">{{ $santri->nama }}</span>
+                            @endif
                             <div style="font-size: 0.75rem; color: var(--color-neutral-500);">Kelas:
                                 {{ $santri->kelas }}</div>
                         </div>

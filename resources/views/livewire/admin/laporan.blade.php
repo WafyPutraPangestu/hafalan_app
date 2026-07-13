@@ -51,7 +51,8 @@
     <div class="print-header">
         <h1 style="font-size: 1.5rem; font-weight: 800; text-transform: uppercase;">Laporan Setoran Santri</h1>
         <p>Periode: <strong>{{ \Carbon\Carbon::parse($startDate)->format('d M Y') }}</strong> s/d
-            <strong>{{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</strong></p>
+            <strong>{{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</strong>
+        </p>
         @if ($siswa_id)
             <p>Nama Santri: <strong>{{ $searchSiswa }}</strong></p>
         @endif
@@ -178,7 +179,7 @@
                 </thead>
                 <tbody>
                     @forelse ($setorans as $setoran)
-                        <tr>
+                        <tr wire:key="setoran-{{ $setoran->id }}">
                             <td>
                                 <strong>{{ \Carbon\Carbon::parse($setoran->tanggal)->format('d/m/Y') }}</strong><br>
                                 <span class="text-caption">{{ \Carbon\Carbon::parse($setoran->jam)->format('H:i') }}
@@ -229,7 +230,16 @@
                             </td>
                             <td><strong>{{ (float) $setoran->jumlah_halaman }}</strong> Hal</td>
                             <td>
-                                <span class="grade-badge grade-{{ strtolower($setoran->nilai) }}">
+                                @php
+                                    // Nilai bisa berupa huruf (A/B/C/D) atau angka (misal 85).
+                                    // Class grade-badge hanya tersedia untuk huruf, jadi angka
+                                    // atau nilai lain di luar A-D fallback ke style netral.
+                                    $nilaiLower = strtolower((string) $setoran->nilai);
+                                    $gradeClass = in_array($nilaiLower, ['a', 'b', 'c', 'd'])
+                                        ? 'grade-' . $nilaiLower
+                                        : 'grade-neutral';
+                                @endphp
+                                <span class="grade-badge {{ $gradeClass }}">
                                     {{ $setoran->nilai }}
                                 </span>
                             </td>
