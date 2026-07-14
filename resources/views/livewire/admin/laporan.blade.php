@@ -212,15 +212,16 @@
                                         {{ $setoran->halaman_iqro_akhir }})
                                     @endif
                                 @elseif($setoran->tingkatan === 'juz_ama')
-                                    <span class="badge badge-warning" style="margin-bottom:4px;">JUZ AMMA</span><br>
+                                    <span class="badge badge-primary" style="margin-bottom:4px;">JUZ AMMA</span><br>
                                     <strong>{{ $setoran->surah_awal }}</strong> (Ayat {{ $setoran->ayat_awal }})
                                     @if ($setoran->surah_awal != $setoran->surah_akhir || $setoran->ayat_awal != $setoran->ayat_akhir)
                                         <br><span class="text-caption">s/d</span>
                                         <strong>{{ $setoran->surah_akhir }}</strong> (Ayat {{ $setoran->ayat_akhir }})
                                     @endif
                                 @elseif($setoran->tingkatan === 'quran')
-                                    <span class="badge badge-juz"
-                                        style="margin-bottom:4px;">{{ strtoupper($setoran->juz) }}</span><br>
+                                    <span class="badge badge-primary" style="margin-bottom:4px;">AL-QUR'AN</span><br>
+                                    <span class="badge badge-juz" style="margin-bottom:4px;">JUZ
+                                        {{ strtoupper($setoran->juz) }}</span><br>
                                     Halaman <strong>{{ $setoran->halaman_awal }}</strong>
                                     @if ($setoran->halaman_awal != $setoran->halaman_akhir)
                                         <span class="text-caption">s/d</span>

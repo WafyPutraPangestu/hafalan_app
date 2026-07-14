@@ -893,6 +893,7 @@ h6,
     box-shadow: var(--shadow-sm);
     transition: all var(--duration-normal);
     min-width: 0;
+    overflow: hidden; /* jaga-jaga kalau angka super panjang */
 }
 @media (min-width: 640px) {
     .card-stat {
@@ -2204,12 +2205,17 @@ h6,
    ============================================================ */
 .grid-stats {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
     gap: 0.875rem;
 }
 @media (min-width: 400px) {
     .grid-stats {
         grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+@media (min-width: 640px) {
+    .grid-stats {
         gap: 1rem;
     }
 }

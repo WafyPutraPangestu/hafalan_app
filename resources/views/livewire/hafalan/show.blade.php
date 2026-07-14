@@ -366,7 +366,7 @@
                                                 {{ $setoran->halaman_iqro_akhir }})</div>
                                         @endif
                                     @elseif($setoran->tingkatan === 'juz_ama')
-                                        <span class="badge badge-warning" style="margin-bottom:4px;">JUZ
+                                        <span class="badge badge-primary" style="margin-bottom:4px;">JUZ
                                             AMMA</span><br>
                                         <span class="font-semibold text-sm">{{ $setoran->surah_awal }}</span>
                                         <span class="text-caption">(Ayat {{ $setoran->ayat_awal }})</span>
@@ -375,8 +375,10 @@
                                                 {{ $setoran->ayat_akhir }})</div>
                                         @endif
                                     @elseif($setoran->tingkatan === 'quran')
-                                        <span class="badge badge-juz"
-                                            style="margin-bottom:4px;">{{ strtoupper($setoran->juz) }}</span><br>
+                                        <span class="badge badge-primary"
+                                            style="margin-bottom:4px;">AL-QUR'AN</span><br>
+                                        <span class="badge badge-juz" style="margin-bottom:4px;">JUZ
+                                            {{ strtoupper($setoran->juz) }}</span><br>
                                         <span class="font-semibold text-sm">Halaman
                                             {{ $setoran->halaman_awal }}</span>
                                         @if ($setoran->halaman_awal != $setoran->halaman_akhir)

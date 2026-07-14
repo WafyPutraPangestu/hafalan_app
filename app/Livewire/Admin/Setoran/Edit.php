@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Setoran;
 use App\Models\Setoran;
 use App\Models\Siswa;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -50,6 +51,12 @@ class Edit extends Component
 
     public function mount(Setoran $setoran)
     {
+        Log::info('=== MOUNT EDIT SETORAN DIPANGGIL ===', [
+            'setoran_id' => $setoran->id,
+            'user' => Auth::id(),
+            'is_admin' => Auth::check() ? Auth::user()->isAdmin() : 'NOT_LOGGED_IN',
+        ]);
+
         abort_unless(Auth::user()->isAdmin(), 403);
         $this->setoran = $setoran;
 
@@ -83,10 +90,17 @@ class Edit extends Component
         $this->jumlah_halaman = $setoran->jumlah_halaman;
         $this->nilai = $setoran->nilai;
         $this->catatan = $setoran->catatan ?? '';
+
+        Log::info('=== MOUNT SELESAI, DATA TER-LOAD ===', [
+            'tingkatan' => $this->tingkatan,
+            'siswa_id' => $this->siswa_id,
+        ]);
     }
 
     public function updatedTingkatan()
     {
+        Log::info('=== updatedTingkatan() TERPANGGIL ===', ['tingkatan_baru' => $this->tingkatan]);
+
         $this->reset([
             'iqro_awal',
             'halaman_iqro_awal',
@@ -122,21 +136,21 @@ class Edit extends Component
             'nilai'          => 'required|string',
             'catatan'        => 'nullable|string',
 
-            'iqro_awal'          => 'required_if:tingkatan,iqro|integer|min:1|max:6',
-            'halaman_iqro_awal'  => 'required_if:tingkatan,iqro|integer|min:1',
-            'ayat_iqro_awal'     => 'required_if:tingkatan,iqro|integer|min:1',
-            'iqro_akhir'         => 'required_if:tingkatan,iqro|integer|min:1|max:6',
-            'halaman_iqro_akhir' => 'required_if:tingkatan,iqro|integer|min:1',
-            'ayat_iqro_akhir'    => 'required_if:tingkatan,iqro|integer|min:1',
+            'iqro_awal'          => 'nullable|required_if:tingkatan,iqro|integer|min:1|max:6',
+            'halaman_iqro_awal'  => 'nullable|required_if:tingkatan,iqro|integer|min:1',
+            'ayat_iqro_awal'     => 'nullable|required_if:tingkatan,iqro|integer|min:1',
+            'iqro_akhir'         => 'nullable|required_if:tingkatan,iqro|integer|min:1|max:6',
+            'halaman_iqro_akhir' => 'nullable|required_if:tingkatan,iqro|integer|min:1',
+            'ayat_iqro_akhir'    => 'nullable|required_if:tingkatan,iqro|integer|min:1',
 
-            'surah_awal'  => 'required_if:tingkatan,juz_ama|string',
-            'ayat_awal'   => 'required_if:tingkatan,juz_ama|integer|min:1',
-            'surah_akhir' => 'required_if:tingkatan,juz_ama|string',
-            'ayat_akhir'  => 'required_if:tingkatan,juz_ama|integer|min:1',
+            'surah_awal'  => 'nullable|required_if:tingkatan,juz_ama|string',
+            'ayat_awal'   => 'nullable|required_if:tingkatan,juz_ama|integer|min:1',
+            'surah_akhir' => 'nullable|required_if:tingkatan,juz_ama|string',
+            'ayat_akhir'  => 'nullable|required_if:tingkatan,juz_ama|integer|min:1',
 
-            'juz'           => 'required_if:tingkatan,quran|string',
-            'halaman_awal'  => 'required_if:tingkatan,quran|integer|min:1',
-            'halaman_akhir' => 'required_if:tingkatan,quran|integer|min:1',
+            'juz'           => 'nullable|required_if:tingkatan,quran|string',
+            'halaman_awal'  => 'nullable|required_if:tingkatan,quran|integer|min:1',
+            'halaman_akhir' => 'nullable|required_if:tingkatan,quran|integer|min:1',
         ];
     }
 
@@ -149,38 +163,67 @@ class Edit extends Component
 
     public function update()
     {
-        $this->validate();
-
-        $this->setoran->update([
-            'siswa_id'           => $this->siswa_id,
-            // ustadz_id tidak diubah agar tetap mencatat ustadz penilai aslinya
-            'tanggal'            => $this->tanggal,
-            'jam'                => $this->jam,
-            'jenis'              => $this->jenis,
-            'tingkatan'          => $this->tingkatan,
-
-            'iqro_awal'          => $this->iqro_awal,
-            'halaman_iqro_awal'  => $this->halaman_iqro_awal,
-            'ayat_iqro_awal'     => $this->ayat_iqro_awal,
-            'iqro_akhir'         => $this->iqro_akhir,
-            'halaman_iqro_akhir' => $this->halaman_iqro_akhir,
-            'ayat_iqro_akhir'    => $this->ayat_iqro_akhir,
-
-            'surah_awal'         => $this->surah_awal ?: null,
-            'ayat_awal'          => $this->ayat_awal,
-            'surah_akhir'        => $this->surah_akhir ?: null,
-            'ayat_akhir'         => $this->ayat_akhir,
-
-            'juz'                => $this->juz ?: null,
-            'halaman_awal'       => $this->halaman_awal,
-            'halaman_akhir'      => $this->halaman_akhir,
-
-            'jumlah_halaman'     => $this->jumlah_halaman,
-            'nilai'              => $this->nilai,
-            'catatan'            => $this->catatan,
+        Log::info('=== update() DIPANGGIL (BUTTON DIKLIK) ===', [
+            'setoran_id' => $this->setoran->id ?? 'NULL_SETORAN',
+            'siswa_id' => $this->siswa_id,
+            'tanggal' => $this->tanggal,
+            'jam' => $this->jam,
+            'jenis' => $this->jenis,
+            'tingkatan' => $this->tingkatan,
+            'jumlah_halaman' => $this->jumlah_halaman,
+            'nilai' => $this->nilai,
         ]);
 
+        try {
+            $this->validate();
+            Log::info('=== VALIDASI LOLOS ===');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('=== VALIDASI GAGAL ===', ['errors' => $e->errors()]);
+            throw $e;
+        }
+
+        try {
+            $this->setoran->update([
+                'siswa_id'           => $this->siswa_id,
+                // ustadz_id tidak diubah agar tetap mencatat ustadz penilai aslinya
+                'tanggal'            => $this->tanggal,
+                'jam'                => $this->jam,
+                'jenis'              => $this->jenis,
+                'tingkatan'          => $this->tingkatan,
+
+                'iqro_awal'          => $this->iqro_awal,
+                'halaman_iqro_awal'  => $this->halaman_iqro_awal,
+                'ayat_iqro_awal'     => $this->ayat_iqro_awal,
+                'iqro_akhir'         => $this->iqro_akhir,
+                'halaman_iqro_akhir' => $this->halaman_iqro_akhir,
+                'ayat_iqro_akhir'    => $this->ayat_iqro_akhir,
+
+                'surah_awal'         => $this->surah_awal ?: null,
+                'ayat_awal'          => $this->ayat_awal,
+                'surah_akhir'        => $this->surah_akhir ?: null,
+                'ayat_akhir'         => $this->ayat_akhir,
+
+                'juz'                => $this->juz ?: null,
+                'halaman_awal'       => $this->halaman_awal,
+                'halaman_akhir'      => $this->halaman_akhir,
+
+                'jumlah_halaman'     => $this->jumlah_halaman,
+                'nilai'              => $this->nilai,
+                'catatan'            => $this->catatan,
+            ]);
+
+            Log::info('=== $this->setoran->update() BERHASIL ===', ['setoran_id' => $this->setoran->id]);
+        } catch (\Throwable $e) {
+            Log::error('=== $this->setoran->update() GAGAL: ' . $e->getMessage() . ' ===', [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
+        }
+
         $this->dispatch('notify', title: 'Berhasil', message: 'Data setoran berhasil diperbarui.');
+
+        Log::info('=== REDIRECT KE INDEX ===');
 
         return $this->redirect(route('admin.setoran.index'), navigate: true);
     }

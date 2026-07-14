@@ -9,12 +9,30 @@
             onmouseout="this.style.color='var(--color-neutral-500)'">
             Data Siswa
         </a>
+
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m9 18 6-6-6-6" />
         </svg>
         <span style="color: var(--color-neutral-900);">{{ $siswa->nama }}</span>
     </div>
+
+    {{-- Form Cetak Laporan (per periode) --}}
+    <form action="{{ route('admin.siswa.cetak', $siswa) }}" method="GET" target="_blank" x-data="{ dari: '', sampai: '' }"
+        style="display: flex; align-items: flex-end; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+        <div class="form-group" style="width: auto;">
+            <label class="form-label">Dari</label>
+            <input type="date" name="dari" x-model="dari" :max="sampai || null" required class="form-input">
+        </div>
+        <div class="form-group" style="width: auto;">
+            <label class="form-label">Sampai</label>
+            <input type="date" name="sampai" x-model="sampai" :min="dari || null" required class="form-input">
+        </div>
+        <button type="submit" :disabled="!dari || !sampai"
+            class="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+            🖨️ Cetak Laporan
+        </button>
+    </form>
 
     {{-- Hero Profile Section --}}
     <div class="card" style="margin-bottom: 1.5rem; overflow: visible;">
@@ -117,53 +135,75 @@
             </div>
         </div>
 
-        {{-- Stats row float up --}}
-        <div
-            style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: -1.5rem 1.5rem 0; position: relative; z-index: 1;">
-            @php
-                $totalSetoran = $siswa->setorans->count();
-                $ziyadah = $siswa->setorans->where('jenis', 'ziyadah')->count();
-                $murojaah = $siswa->setorans->where('jenis', 'murojaah')->count();
-                $totalHalaman = $siswa->setorans->sum('jumlah_halaman');
-                $nilaiA = $siswa->setorans->where('nilai', 'A')->count();
-                $avgNilai = $nilaiA > 0 && $totalSetoran > 0 ? round(($nilaiA / $totalSetoran) * 100) : 0;
-            @endphp
+        {{--
+            Stats row: sebelumnya dipaksa 4 kolom sejajar (repeat(4, 1fr)) dengan margin
+            kiri/kanan tetap 1.5rem — di layar kecil ini bikin card kepotong/overflow jadi
+            bisa discroll horizontal. Sekarang pakai utility yang sudah ada di design system
+            (.grid-stats + .card-stat) yang otomatis reflow: 1 kolom di HP kecil, 2 kolom di
+            ≥400px, 4 kolom di ≥768px — dan tiap card tetap punya border+radius sendiri jadi
+            tidak ada lagi trik "border-right: none" yang rawan patah.
+        --}}
+        @php
+            $totalSetoran = $siswa->setorans->count();
+            $ziyadah = $siswa->setorans->where('jenis', 'ziyadah')->count();
+            $murojaah = $siswa->setorans->where('jenis', 'murojaah')->count();
+            $totalHalaman = $siswa->setorans->sum('jumlah_halaman');
+        @endphp
 
-            <div
-                style="background: white; border: 1px solid var(--color-neutral-200); border-right: none; border-radius: var(--radius-lg) 0 0 var(--radius-lg); padding: 1.25rem 1.5rem; box-shadow: var(--shadow-md);">
-                <p class="text-label" style="margin-bottom: 0.5rem;">Total Setoran</p>
-                <p style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1;">
-                    {{ $totalSetoran }}</p>
-                <p style="font-size: 0.75rem; color: var(--color-neutral-500); margin-top: 0.25rem; font-weight: 600;">
-                    sesi hafalan</p>
+        <div class="grid-stats" style="margin: -1.5rem 1rem 0; position: relative; z-index: 1;">
+            <div class="card-stat">
+                <div class="card-stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                </div>
+                <p class="card-stat-label">Total Setoran</p>
+                <p class="card-stat-value">{{ $totalSetoran }}</p>
+                <p class="card-stat-sub">sesi hafalan</p>
             </div>
 
-            <div
-                style="background: white; border: 1px solid var(--color-neutral-200); border-right: none; padding: 1.25rem 1.5rem; box-shadow: var(--shadow-md);">
-                <p class="text-label" style="margin-bottom: 0.5rem; color: var(--color-primary-600);">Ziyadah</p>
-                <p
-                    style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; color: var(--color-primary-600);">
-                    {{ $ziyadah }}</p>
-                <p style="font-size: 0.75rem; color: var(--color-neutral-500); margin-top: 0.25rem; font-weight: 600;">
-                    hafalan baru</p>
+            <div class="card-stat">
+                <div class="card-stat-icon" style="background: var(--color-primary-300);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M12 20v-6M6 20V10M18 20V4" />
+                    </svg>
+                </div>
+                <p class="card-stat-label" style="color: var(--color-primary-600);">Ziyadah</p>
+                <p class="card-stat-value" style="color: var(--color-primary-600);">{{ $ziyadah }}</p>
+                <p class="card-stat-sub">hafalan baru</p>
             </div>
 
-            <div
-                style="background: white; border: 1px solid var(--color-neutral-200); border-right: none; padding: 1.25rem 1.5rem; box-shadow: var(--shadow-md);">
-                <p class="text-label" style="margin-bottom: 0.5rem;">Murojaah</p>
-                <p style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1;">
-                    {{ $murojaah }}</p>
-                <p style="font-size: 0.75rem; color: var(--color-neutral-500); margin-top: 0.25rem; font-weight: 600;">
-                    pengulangan</p>
+            <div class="card-stat">
+                <div class="card-stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                    </svg>
+                </div>
+                <p class="card-stat-label">Murojaah</p>
+                <p class="card-stat-value">{{ $murojaah }}</p>
+                <p class="card-stat-sub">pengulangan</p>
             </div>
 
-            <div
-                style="background: white; border: 1px solid var(--color-neutral-200); border-radius: 0 var(--radius-lg) var(--radius-lg) 0; padding: 1.25rem 1.5rem; box-shadow: var(--shadow-md);">
-                <p class="text-label" style="margin-bottom: 0.5rem;">Total Halaman</p>
-                <p style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1;">
-                    {{ number_format($totalHalaman, 1) }}</p>
-                <p style="font-size: 0.75rem; color: var(--color-neutral-500); margin-top: 0.25rem; font-weight: 600;">
-                    hal. disetorkan</p>
+            <div class="card-stat">
+                <div class="card-stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                </div>
+                <p class="card-stat-label">Total Halaman</p>
+                <p class="card-stat-value">{{ number_format($totalHalaman, 1) }}</p>
+                <p class="card-stat-sub">hal. disetorkan</p>
             </div>
         </div>
 
@@ -234,7 +274,8 @@
                     <tr>
                         <th>Tanggal & Jam</th>
                         <th>Jenis</th>
-                        <th>Surah (Awal — Akhir)</th>
+                        <th>Tingkatan</th>
+                        <th>Detail Hafalan</th>
                         <th>Halaman</th>
                         <th>Nilai</th>
                         <th>Catatan Ustadz</th>
@@ -255,22 +296,63 @@
                             <td>
                                 @if ($setoran->jenis === 'ziyadah')
                                     <span class="badge pill-ziyadah">Ziyadah</span>
-                                @else
+                                @elseif ($setoran->jenis === 'murojaah')
                                     <span class="badge pill-murojaah">Murojaah</span>
+                                @else
+                                    <span class="badge pill-tadarus">Tadarus</span>
                                 @endif
                             </td>
                             <td>
+                                @php
+                                    $tingkatanLabel = match ($setoran->tingkatan) {
+                                        'iqro' => 'Iqro',
+                                        'juz_ama' => "Juz 'Amma",
+                                        'quran' => "Al-Qur'an",
+                                        default => ucfirst($setoran->tingkatan),
+                                    };
+                                @endphp
+                                <span class="badge badge-juz">{{ $tingkatanLabel }}</span>
+                            </td>
+                            <td>
+                                {{--
+                                    Sebelumnya kolom ini cuma nampilin surah_awal/surah_akhir,
+                                    padahal itu cuma valid buat tingkatan "juz_ama". Untuk
+                                    "iqro" dan "quran" field-nya beda, jadi harus dicabang
+                                    per tingkatan (sama seperti logic di PDF).
+                                --}}
                                 <div style="font-size: 0.875rem;">
-                                    <p style="font-weight: 700; color: var(--color-neutral-900);">
-                                        {{ $setoran->surah_awal }}</p>
-                                    <p style="color: var(--color-neutral-500); font-size: 0.75rem; font-weight: 600;">
-                                        Ayat {{ $setoran->ayat_awal }}
-                                        @if ($setoran->surah_awal !== $setoran->surah_akhir || $setoran->ayat_awal !== $setoran->ayat_akhir)
-                                            → {{ $setoran->surah_akhir }} : {{ $setoran->ayat_akhir }}
-                                        @else
-                                            — {{ $setoran->ayat_akhir }}
-                                        @endif
-                                    </p>
+                                    @if ($setoran->tingkatan === 'iqro')
+                                        <p style="font-weight: 700; color: var(--color-neutral-900);">
+                                            Iqro {{ $setoran->iqro_awal }} → Iqro {{ $setoran->iqro_akhir }}
+                                        </p>
+                                        <p
+                                            style="color: var(--color-neutral-500); font-size: 0.75rem; font-weight: 600;">
+                                            Hal. {{ $setoran->halaman_iqro_awal }}:{{ $setoran->ayat_iqro_awal }}
+                                            → Hal. {{ $setoran->halaman_iqro_akhir }}:{{ $setoran->ayat_iqro_akhir }}
+                                        </p>
+                                    @elseif ($setoran->tingkatan === 'juz_ama')
+                                        <p style="font-weight: 700; color: var(--color-neutral-900);">
+                                            {{ $setoran->surah_awal }}
+                                        </p>
+                                        <p
+                                            style="color: var(--color-neutral-500); font-size: 0.75rem; font-weight: 600;">
+                                            Ayat {{ $setoran->ayat_awal }}
+                                            @if ($setoran->surah_awal !== $setoran->surah_akhir || $setoran->ayat_awal !== $setoran->ayat_akhir)
+                                                → {{ $setoran->surah_akhir }} : {{ $setoran->ayat_akhir }}
+                                            @else
+                                                — {{ $setoran->ayat_akhir }}
+                                            @endif
+                                        </p>
+                                    @else
+                                        {{-- quran --}}
+                                        <p style="font-weight: 700; color: var(--color-neutral-900);">
+                                            {{ $setoran->juz }}
+                                        </p>
+                                        <p
+                                            style="color: var(--color-neutral-500); font-size: 0.75rem; font-weight: 600;">
+                                            Hal. {{ $setoran->halaman_awal }} – {{ $setoran->halaman_akhir }}
+                                        </p>
+                                    @endif
                                 </div>
                             </td>
                             <td>
@@ -278,15 +360,14 @@
                             </td>
                             <td>
                                 @php
-                                    $nilaiClass = match (strtoupper($setoran->nilai)) {
-                                        'A' => 'grade-a',
-                                        'B' => 'grade-b',
-                                        'C' => 'grade-c',
+                                    $nilaiUpper = strtoupper((string) $setoran->nilai);
+                                    $nilaiClass = match (true) {
+                                        in_array($nilaiUpper, ['A', 'B', 'C']) => 'grade-' . strtolower($nilaiUpper),
+                                        is_numeric($setoran->nilai) => 'grade-neutral',
                                         default => 'grade-d',
                                     };
                                 @endphp
-                                <span
-                                    class="grade-badge {{ $nilaiClass }}">{{ strtoupper($setoran->nilai) }}</span>
+                                <span class="grade-badge {{ $nilaiClass }}">{{ $setoran->nilai }}</span>
                             </td>
                             <td style="max-width: 200px;">
                                 @if ($setoran->catatan)
@@ -302,7 +383,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <div class="empty-state" style="padding: 2.5rem 1.5rem;">
                                     <div class="empty-state-icon">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"

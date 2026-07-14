@@ -48,7 +48,33 @@ class Index extends Component
         $user = Auth::user();
 
         $setorans = Setoran::query()
-            ->select(['id', 'siswa_id', 'ustadz_id', 'tanggal', 'jam', 'jenis', 'tingkatan', 'nilai', 'jumlah_halaman'])
+            ->select([
+                'id',
+                'siswa_id',
+                'ustadz_id',
+                'tanggal',
+                'jam',
+                'jenis',
+                'tingkatan',
+                'nilai',
+                'jumlah_halaman',
+                // iqro
+                'iqro_awal',
+                'halaman_iqro_awal',
+                'ayat_iqro_awal',
+                'iqro_akhir',
+                'halaman_iqro_akhir',
+                'ayat_iqro_akhir',
+                // juz ama
+                'surah_awal',
+                'ayat_awal',
+                'surah_akhir',
+                'ayat_akhir',
+                // quran
+                'juz',
+                'halaman_awal',
+                'halaman_akhir',
+            ])
             ->with([
                 'siswa:id,nama,kelas',
                 'ustadz:id,name',

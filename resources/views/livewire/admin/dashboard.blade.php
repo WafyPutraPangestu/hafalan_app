@@ -18,8 +18,9 @@
 
     <div class="grid-stats" style="margin-bottom: 1.5rem;">
         <div class="card-stat">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-start; min-width: 0; gap: 0.5rem;">
+                <div style="min-width: 0;">
                     <div class="card-stat-label">Santri Aktif</div>
                     <div class="card-stat-value">{{ $totalSantri }}</div>
                 </div>
@@ -29,8 +30,9 @@
         </div>
 
         <div class="card-stat">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-start; min-width: 0; gap: 0.5rem;">
+                <div style="min-width: 0;">
                     <div class="card-stat-label">Setoran Hari Ini</div>
                     <div class="card-stat-value">{{ $setoranHariIni }}</div>
                 </div>
@@ -41,15 +43,16 @@
         </div>
 
         <div class="card-stat">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-start; min-width: 0; gap: 0.5rem;">
+                <div style="min-width: 0;">
                     <div class="card-stat-label">Total Bulan Ini</div>
                     <div class="card-stat-value">{{ $setoranBulanIni }}</div>
                 </div>
                 <div class="card-stat-icon"
                     style="background: var(--color-warning-50); color: var(--color-warning-600);">📅</div>
             </div>
-            <div class="card-stat-sub">
+            <div class="card-stat-sub" style="flex-wrap: wrap;">
                 @php
                     $growthClass = $growthPercent > 0 ? 'up' : ($growthPercent < 0 ? 'down' : 'flat');
                     $growthIcon = $growthPercent > 0 ? '↑' : ($growthPercent < 0 ? '↓' : '→');
@@ -63,23 +66,25 @@
 
         @if ($isAdmin)
             <div class="card-stat"
-                style="background: var(--color-primary-100); border-color: var(--color-primary-300); justify-content: center; align-items: center; gap: 0.5rem; cursor: pointer;"
+                style="background: var(--color-primary-100); border-color: var(--color-primary-300); flex-direction: row; justify-content: center; align-items: center; gap: 0.5rem; cursor: pointer; flex-wrap: wrap;"
                 onclick="window.Livewire.navigate('{{ route('admin.siswa.create') }}')">
                 <div class="avatar avatar-md"
-                    style="background: var(--color-neutral-900); color: var(--color-primary-400);">+</div>
+                    style="background: var(--color-neutral-900); color: var(--color-primary-400); flex-shrink: 0;">+
+                </div>
                 <div
-                    style="font-weight: 800; color: var(--color-neutral-900); text-transform: uppercase; font-size: 0.875rem;">
+                    style="font-weight: 800; color: var(--color-neutral-900); text-transform: uppercase; font-size: 0.875rem; text-align: center;">
                     Tambah Santri
                 </div>
             </div>
         @else
             <div class="card-stat"
-                style="background: var(--color-primary-100); border-color: var(--color-primary-300); justify-content: center; align-items: center; gap: 0.5rem; cursor: pointer;"
+                style="background: var(--color-primary-100); border-color: var(--color-primary-300); flex-direction: row; justify-content: center; align-items: center; gap: 0.5rem; cursor: pointer; flex-wrap: wrap;"
                 onclick="window.Livewire.navigate('{{ route('admin.setoran.create') }}')">
                 <div class="avatar avatar-md"
-                    style="background: var(--color-neutral-900); color: var(--color-primary-400);">+</div>
+                    style="background: var(--color-neutral-900); color: var(--color-primary-400); flex-shrink: 0;">+
+                </div>
                 <div
-                    style="font-weight: 800; color: var(--color-neutral-900); text-transform: uppercase; font-size: 0.875rem;">
+                    style="font-weight: 800; color: var(--color-neutral-900); text-transform: uppercase; font-size: 0.875rem; text-align: center;">
                     Input Setoran
                 </div>
             </div>
@@ -238,14 +243,17 @@
                                         <strong>Iqro {{ $setoran->iqro_awal }}</strong>
                                         <span class="text-caption">(Hal {{ $setoran->halaman_iqro_awal }})</span>
                                     @elseif($setoran->tingkatan === 'juz_ama')
-                                        <span class="badge badge-warning"
+                                        <span class="badge badge-primary"
                                             style="margin-bottom:4px; font-size:0.6rem; padding: 2px 6px;">JUZ
                                             AMMA</span><br>
                                         <strong>{{ $setoran->surah_awal }}</strong>
                                         <span class="text-caption">(Ay. {{ $setoran->ayat_awal }})</span>
                                     @elseif($setoran->tingkatan === 'quran')
+                                        <span class="badge badge-primary"
+                                            style="margin-bottom:4px; font-size:0.6rem; padding: 2px 6px;">AL-QUR'AN</span><br>
                                         <span class="badge badge-juz"
-                                            style="margin-bottom:4px; font-size:0.6rem; padding: 2px 6px;">{{ strtoupper($setoran->juz) }}</span><br>
+                                            style="margin-bottom:4px; font-size:0.6rem; padding: 2px 6px;">JUZ
+                                            {{ strtoupper($setoran->juz) }}</span><br>
                                         Hal <strong>{{ $setoran->halaman_awal }}</strong>
                                     @endif
                                 </td>

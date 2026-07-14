@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <form wire.prevent:submit="update">
+    <form wire:submit.prevent="update">
         <div class="card mb-5">
             <div class="card-header">
                 <h3 class="h4">Data Santri &amp; Waktu</h3>

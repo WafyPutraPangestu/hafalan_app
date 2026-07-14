@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CetakSiswaController;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Laporan;
 use App\Livewire\Auth\Login;
@@ -32,6 +33,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', Create::class)->name('create');
         Route::get('/{siswa}', Show::class)->name('show');
         Route::get('/{siswa}/edit', Edit::class)->name('edit');
+        Route::get('/{siswa}/cetak', CetakSiswaController::class)->name('cetak');
     });
     // ===== MANAJEMEN AKUN (USTADZ & ADMIN) — ADMIN ONLY =====
     Route::prefix('admin/ustadz')->name('admin.ustadz.')->middleware('role:admin')->group(function () {
